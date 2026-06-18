@@ -37,6 +37,11 @@ app.post("/fabrica/alarma", (req, res) => {
  
     if (alarma) {
         fabrica.puerta.estado = "BLOQUEADA";
+        fabrica.prensa.estado = "APAGADA";
+    }
+    else {
+        fabrica.puerta.estado = "CERRADA";
+        fabrica.prensa.estado = "ENCENDIDA";
     }
  
     res.json({
