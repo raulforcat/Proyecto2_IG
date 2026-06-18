@@ -114,6 +114,66 @@ app.post("/puerta/bloquear", (req, res) => {
     });
 });
 
+//----------PRENSA----------//
+
+app.get("/prensa", (req, res) => {
+    res.json(fabrica.prensa);
+});
+
+app.post("/prensa/estado", (req, res) => {
+    const { estado } = req.body;
+ 
+    const estadosValidos = ["APAGADA", "ENCENDIDA", "TRABAJANDO", "ERROR", "MANTENIMIENTO"];
+    if (!estadosValidos.includes(estado)) {
+        return res.status(400).json({
+            error: "Estado no válido",
+            estadosValidos
+        });
+    }
+ 
+    if (fabrica.alarma && estado === "TRABAJANDO") {
+        return res.status(403).json({
+            error: "No se puede activar la prensa con alarma general activada",
+            prensa: fabrica.prensa
+        });
+    }
+ 
+    fabrica.prensa.estado = estado;
+    fabrica.prensa.error = (estado === "ERROR");
+ 
+    res.json({
+        mensaje: `Estado de la prensa cambiado a ${estado}`,
+        prensa: fabrica.prensa
+    });
+});
+
+app.post("/prensa/ciclo", (req, res) => {
+    if (fabrica.prensa.estado !== "TRABAJANDO") {
+        return res.status(400).json({
+            error: "La prensa no está en estado TRABAJANDO",
+            prensa: fabrica.prensa
+        });
+    }
+ 
+    fabrica.prensa.ciclos += 1;
+ 
+    res.json({
+        mensaje: "Ciclo registrado",
+        prensa: fabrica.prensa
+    });
+});
+
+app.post("/prensa/reset", (req, res) => {
+    fabrica.prensa.ciclos = 0;
+    fabrica.prensa.error = false;
+    fabrica.prensa.estado = "ENCENDIDA";
+ 
+    res.json({
+        mensaje: "Prensa reseteada",
+        prensa: fabrica.prensa
+    });
+});
+
 const PORT = process.env.PORT || 10000;
 
 app.listen(PORT, () => {
