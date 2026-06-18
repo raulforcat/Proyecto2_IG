@@ -174,6 +174,59 @@ app.post("/prensa/reset", (req, res) => {
     });
 });
 
+//----------GENERADOR----------//
+
+app.get("/generador", (req, res) => {
+    res.json({
+        ...fabrica.generador,
+        nivelEnergia: fabrica.nivelEnergia
+    });
+});
+
+app.post("/generador/energia", (req, res) => {
+    const { nivelEnergia } = req.body;
+ 
+    if (typeof nivelEnergia !== "number" || nivelEnergia < 0 || nivelEnergia > 100) {
+        return res.status(400).json({ error: "nivelEnergia debe ser un número entre 0 y 100" });
+    }
+ 
+    fabrica.nivelEnergia = nivelEnergia;
+ 
+    if (nivelEnergia > 50) {
+        fabrica.generador.estado = "NORMAL";
+        fabrica.alarma = false;
+    } else if (nivelEnergia >= 25) {
+        fabrica.generador.estado = "BAJO_CONSUMO";
+    } else {
+        fabrica.generador.estado = "CRITICO";
+        fabrica.alarma = true;
+    }
+ 
+    res.json({
+        mensaje: `Nivel de energía actualizado a ${nivelEnergia}%`,
+        nivelEnergia: fabrica.nivelEnergia,
+        generador: fabrica.generador,
+        alarma: fabrica.alarma
+    });
+});
+ 
+app.post("/generador/consumo", (req, res) => {
+    const { consumo } = req.body;
+ 
+    if (typeof consumo !== "number" || consumo < 0) {
+        return res.status(400).json({ error: "consumo debe ser un número positivo" });
+    }
+ 
+    fabrica.generador.consumo = consumo;
+ 
+    res.json({
+        mensaje: `Consumo actualizado a ${consumo}`,
+        generador: fabrica.generador
+    });
+});
+
+//----------SERVIDOR----------//
+
 const PORT = process.env.PORT || 10000;
 
 app.listen(PORT, () => {
